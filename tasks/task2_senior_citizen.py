@@ -1,4 +1,5 @@
 import cv2
+import os
 import csv
 from datetime import datetime
 
@@ -10,12 +11,17 @@ face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
 
-# CSV Logger Setup
-csv_file = "logs/senior_citizen_log.csv"
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, "senior_citizen_log.csv")
 
-with open(csv_file, "a", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Timestamp", "Age Range", "Gender", "Senior Citizen"])
+# Create logs directory safely
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Create CSV file if not exists
+if not os.path.exists(LOG_FILE):
+    with open(LOG_FILE, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Timestamp", "Age Range", "Gender", "Senior Citizen"])
 
 # Age group → numeric decision
 def is_senior(age_range):
@@ -51,7 +57,7 @@ while True:
         )
 
         # Log to CSV
-        with open(csv_file, "a", newline="") as f:
+        with open(LOG_FILE, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow([
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
