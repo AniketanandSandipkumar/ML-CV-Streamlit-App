@@ -1,11 +1,10 @@
 streamlit
-opencv-python-headless
+opencv-python
 tensorflow-cpu==2.13.0
+ultralytics
 numpy
 librosa
-soundfile
 scikit-learn
 pandas
 Pillow
 tqdm
-ultralytics
