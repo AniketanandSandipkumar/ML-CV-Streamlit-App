@@ -7,7 +7,7 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MODEL_PATH = os.path.join(BASE_DIR, "voice_age.h5")
 
-voice_age_model = load_model(MODEL_PATH)
+voice_age_model = load_model(MODEL_PATH, compile=False)
 # MFCC extractor 
 def extract_mfcc(file_path, n_mfcc=40, max_len=174):
     try:
