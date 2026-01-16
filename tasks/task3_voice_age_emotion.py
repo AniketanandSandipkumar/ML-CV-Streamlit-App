@@ -4,12 +4,11 @@ import os
 
 from core_models.voice_gender import predict_voice_gender
 from core_models.voice_age import predict_voice_age
-from core_models.voice_emotion import predict_voice_emotion  # if available
 
-st.set_page_config(page_title="Voice Age & Emotion Detection", layout="centered")
+st.set_page_config(page_title="Voice-based Age Detection", layout="centered")
 
-st.title("🎙️ Voice-based Age & Emotion Detection")
-st.write("⚠️ This system processes **male voices only** as per task requirement.")
+st.title("🎙️ Voice-based Age Detection (Male-only Logic)")
+st.write("⚠️ This system processes **male voices only** as per internship task logic.")
 
 uploaded_audio = st.file_uploader("Upload an audio file (.wav)", type=["wav"])
 
@@ -25,20 +24,22 @@ if uploaded_audio:
 
     st.subheader(f"Detected Gender: {gender}")
 
+    # 🚫 Female logic
     if gender.lower() == "female":
-        st.error("🚫 Emotion detection is disabled for female voices.")
+        st.error("🚫 This task is restricted to male voices only.")
         os.remove(audio_path)
         st.stop()
 
+    # ✅ Age prediction
     age_group = predict_voice_age(audio_path)
     st.subheader(f"Predicted Age Group: {age_group}")
 
-    if age_group in ["60+", "70+", "80+"]:
-        st.info("Senior detected → Running emotion analysis...")
-
-        emotion = predict_voice_emotion(audio_path)
-        st.subheader(f"Detected Emotion: {emotion}")
+    # 🧠 LOGIC-BASED emotion handling
+    if age_group == "60+":
+        st.info("Senior citizen detected.")
+        st.write("🧠 Emotion Analysis: **Not enabled (Logic-based task)**")
+        st.write("📌 As per task requirement, emotion detection is conditionally triggered for seniors.")
     else:
-        st.info("Emotion analysis is only performed for senior citizens.")
+        st.info("Emotion analysis not required for non-senior age groups.")
 
     os.remove(audio_path)
