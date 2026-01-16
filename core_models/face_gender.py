@@ -7,7 +7,7 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MODEL_PATH = os.path.join(BASE_DIR, "face_gender.h5")
 
-gender_model = load_model(MODEL_PATH)
+gender_model = load_model(MODEL_PATH, compile=False)
 # Gender mapping
 GENDER_MAP = {
     0: "Male",
