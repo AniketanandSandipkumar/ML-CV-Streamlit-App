@@ -1,52 +1,83 @@
 import streamlit as st
 import cv2
 import numpy as np
+from ultralytics import YOLO
+from PIL import Image
 
 st.set_page_config(page_title="Car Color & People Count", layout="centered")
-st.title("🚗 Car Color Detection & People Counting")
+st.title("🚗 Car Color Detection & 👥 People Count")
 
-uploaded_image = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+st.write("Detects cars and people using YOLO and applies color-based logic.")
 
-# Load detectors
-hog = cv2.HOGDescriptor()
-hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+# Load YOLO model (cached)
+@st.cache_resource
+def load_model():
+    return YOLO("yolov8n.pt")
 
-car_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_car.xml"
-)
+model = load_model()
 
-def detect_dominant_color(image):
-    image = image.reshape((-1, 3))
-    avg_color = np.mean(image, axis=0)
-    b, g, r = avg_color
-    return "blue" if b > r and b > g else "other"
+uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+
+def detect_car_color(car_roi):
+    avg_color = car_roi.mean(axis=(0, 1))
+    # BGR format
+    if avg_color[0] > avg_color[2]:
+        return "Blue"
+    return "Other"
 
 if uploaded_image:
-    file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    img_resized = cv2.resize(img, (640, 480))
+    image = Image.open(uploaded_image)
+    frame = np.array(image)
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-    # People detection
-    people, _ = hog.detectMultiScale(img_resized)
-    people_count = len(people)
+    results = model(frame)
 
-    # Car detection
-    gray = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
-    cars = car_cascade.detectMultiScale(gray, 1.1, 3)
+    car_count = 0
+    person_count = 0
 
-    # Draw people boxes
-    for (x, y, w, h) in people:
-        cv2.rectangle(img_resized, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    for r in results:
+        for box in r.boxes:
+            cls = int(box.cls[0])
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-    # Draw car boxes with color logic
-    for (x, y, w, h) in cars:
-        car_roi = img_resized[y:y+h, x:x+w]
-        color = detect_dominant_color(car_roi)
+            roi = frame[y1:y2, x1:x2]
 
-        box_color = (0, 0, 255) if color == "blue" else (255, 0, 0)
-        cv2.rectangle(img_resized, (x, y), (x+w, y+h), box_color, 3)
+            if cls == 2:  # Car
+                car_count += 1
+                car_color = detect_car_color(roi)
 
-    st.image(img_resized, channels="BGR", caption="Detection Result")
+                if car_color == "Blue":
+                    box_color = (0, 0, 255)  # Red box
+                else:
+                    box_color = (255, 0, 0)  # Blue box
 
-    st.subheader(f"👥 People Count: {people_count}")
-    st.subheader(f"🚗 Cars Detected: {len(cars)}")
+                cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
+                cv2.putText(
+                    frame,
+                    f"Car ({car_color})",
+                    (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    box_color,
+                    2,
+                )
+
+            elif cls == 0:  # Person
+                person_count += 1
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(
+                    frame,
+                    "Person",
+                    (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 255, 0),
+                    2,
+                )
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    st.image(frame, caption="Detection Result", use_container_width=True)
+
+    st.success(f"🚗 Cars detected: {car_count}")
+    st.success(f"👥 People detected: {person_count}")
