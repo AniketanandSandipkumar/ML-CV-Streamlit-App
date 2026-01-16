@@ -2,7 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 
-from core_models.face_emotion import predict_emotion
+from core_models.face_emotion import predict_face_emotion
 
 st.set_page_config(page_title="Nationality Detection Logic", layout="centered")
 st.title("🌍 Nationality Detection (Logic Showcase)")
