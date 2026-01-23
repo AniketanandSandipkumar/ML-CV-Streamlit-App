@@ -1,13 +1,20 @@
+# Core app
 streamlit==1.53.0
 
+# TensorFlow / Keras (LEGACY SAFE)
 tensorflow==2.12.0
 keras==2.12.0
+numpy<2.0
 
+# Computer Vision
 opencv-python-headless==4.8.1.78
-numpy
-librosa
-scikit-learn
-pandas
-Pillow
-tqdm
-ultralytics
+Pillow==10.2.0
+
+# ML / DSP
+scikit-learn==1.3.2
+pandas==2.0.3
+librosa==0.10.1
+tqdm==4.66.1
+
+# YOLO (lock version to avoid keras 3)
+ultralytics==8.0.196
